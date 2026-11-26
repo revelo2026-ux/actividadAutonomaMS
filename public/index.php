@@ -20,6 +20,15 @@ switch ($action) {
     case 'logout':
         $authController->logout();
         break;
+    case 'registrarMascota':
+        $citaController->registrarMascota();
+        break;
+    case 'agendarCita':
+        $citaController->agendarCita();
+        break;
+    case 'cambiarEstadoCita':
+        $citaController->cambiarEstadoCita();
+        break;
     case 'dashboard':
     default:
         $citaController->dashboard();
