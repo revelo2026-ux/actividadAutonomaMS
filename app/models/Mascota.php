@@ -15,5 +15,16 @@ class Mascota {
         return $stmt->fetchAll();
     }
 
-    // TODO [Sprint 2 - RF02]: Implementar método crear($nombre, $especie, $raza, $edad, $id_dueno)
+    public function crear($nombre, $especie, $raza, $edad, $id_dueno) {
+        $query = "INSERT INTO mascotas (nombre, especie, raza, edad, id_dueno)
+                  VALUES (:nombre, :especie, :raza, :edad, :id_dueno)";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':nombre', $nombre);
+        $stmt->bindParam(':especie', $especie);
+        $stmt->bindParam(':raza', $raza);
+        $stmt->bindParam(':edad', $edad, PDO::PARAM_INT);
+        $stmt->bindParam(':id_dueno', $id_dueno, PDO::PARAM_INT);
+       
+        return $stmt->execute();
+    }
 }
