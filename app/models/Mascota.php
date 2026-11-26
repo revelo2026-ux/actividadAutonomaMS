@@ -14,8 +14,7 @@ class Mascota {
         $stmt->execute();
         return $stmt->fetchAll();
     }
-
-    public function crear($nombre, $especie, $raza, $edad, $id_dueno) {
+public function crear($nombre, $especie, $raza, $edad, $id_dueno) {
         $query = "INSERT INTO mascotas (nombre, especie, raza, edad, id_dueno)
                   VALUES (:nombre, :especie, :raza, :edad, :id_dueno)";
         $stmt = $this->conn->prepare($query);
@@ -27,4 +26,5 @@ class Mascota {
        
         return $stmt->execute();
     }
+    
 }
