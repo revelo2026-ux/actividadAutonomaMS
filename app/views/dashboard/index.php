@@ -1,5 +1,22 @@
 <?php require __DIR__ . '/../layouts/header.php'; ?>
 
+<!-- Alertas de retroalimentación (Éxito / Error) -->
+<?php if (isset($_SESSION['exito'])): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <?= htmlspecialchars($_SESSION['exito']) ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <?php unset($_SESSION['exito']); ?>
+<?php endif; ?>
+
+<?php if (isset($_SESSION['error'])): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <?= htmlspecialchars($_SESSION['error']) ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <?php unset($_SESSION['error']); ?>
+<?php endif; ?>
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h3 class="fw-bold mb-0">Panel de Gestión de Citas</h3>
@@ -8,12 +25,10 @@
 
     <?php if ($usuario['rol'] === 'cliente'): ?>
         <div class="d-flex gap-2">
-            <!-- TODO [Sprint 2 - RF02]: Conectar este botón a un modal o vista para registrar mascota -->
-            <button class="btn btn-outline-primary btn-sm" onclick="mostrarAlertaSprint('Sprint 2 - RF02: Formulario de nueva mascota')">
+            <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalNuevaMascota">
                 <i class="bi bi-plus-circle me-1"></i> Nueva Mascota
             </button>
-            <!-- TODO [Sprint 2 - RF03]: Conectar este botón a un modal o vista para agendar cita -->
-            <button class="btn btn-primary btn-sm" onclick="mostrarAlertaSprint('Sprint 2 - RF03: Formulario para solicitar cita')">
+            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAgendarCita" <?= empty($mascotas) ? 'disabled' : '' ?>>
                 <i class="bi bi-calendar-plus me-1"></i> Solicitar Cita
             </button>
         </div>
@@ -27,7 +42,7 @@
         </div>
         <div class="card-body">
             <?php if (empty($mascotas)): ?>
-                <p class="text-muted mb-0">No tienes mascotas registradas aún.</p>
+                <p class="text-muted mb-0">No tienes mascotas registradas aún. Registra una para poder solicitar citas.</p>
             <?php else: ?>
                 <div class="row g-3">
                     <?php foreach ($mascotas as $m): ?>
@@ -48,7 +63,6 @@
 <div class="card shadow-sm border-0">
     <div class="card-header bg-white d-flex justify-content-between align-items-center">
         <span class="fw-semibold"><i class="bi bi-calendar-check me-1 text-primary"></i> Listado de Citas</span>
-        <!-- TODO [Sprint 4]: Activar filtro dinámico en JS por estado -->
         <select id="filtroEstado" class="form-select form-select-sm w-auto">
             <option value="todas">Todos los estados</option>
             <option value="pendiente">Pendiente</option>
@@ -86,7 +100,7 @@
                                 default => 'bg-secondary'
                             };
                         ?>
-                        <tr data-estado="<?= htmlspecialchars($c['estado']) ?>">
+                        <tr class="fila-cita" data-estado="<?= htmlspecialchars($c['estado']) ?>">
                             <td><?= date('d/m/Y H:i', strtotime($c['fecha_hora'])) ?></td>
                             <td>
                                 <strong><?= htmlspecialchars($c['mascota']) ?></strong>
@@ -100,12 +114,33 @@
                             <td><span class="badge <?= $badgeClass ?> text-uppercase"><?= htmlspecialchars($c['estado']) ?></span></td>
                             <td>
                                 <?php if ($usuario['rol'] === 'recepcionista'): ?>
-                                    <!-- TODO [Sprint 3 - RF05]: Conectar botones de confirmar / cancelar -->
-                                    <button class="btn btn-sm btn-outline-success" onclick="mostrarAlertaSprint('Sprint 3 - RF05: Confirmar cita #<?= $c['id'] ?>')">Confirmar</button>
-                                    <button class="btn btn-sm btn-outline-danger" onclick="mostrarAlertaSprint('Sprint 3 - RF05: Cancelar cita #<?= $c['id'] ?>')">Cancelar</button>
+                                    <?php if ($c['estado'] === 'pendiente'): ?>
+                                        <form action="index.php?action=cambiarEstadoCita" method="POST" class="d-inline">
+                                            <input type="hidden" name="id_cita" value="<?= $c['id'] ?>">
+                                            <input type="hidden" name="estado" value="confirmada">
+                                            <button type="submit" class="btn btn-sm btn-outline-success">Confirmar</button>
+                                        </form>
+                                    <?php endif; ?>
+                                    <?php if ($c['estado'] === 'pendiente' || $c['estado'] === 'confirmada'): ?>
+                                        <form action="index.php?action=cambiarEstadoCita" method="POST" class="d-inline">
+                                            <input type="hidden" name="id_cita" value="<?= $c['id'] ?>">
+                                            <input type="hidden" name="estado" value="cancelada">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Cancelar</button>
+                                        </form>
+                                    <?php endif; ?>
+                                    <?php if ($c['estado'] === 'atendida' || $c['estado'] === 'cancelada'): ?>
+                                        <span class="small text-muted">Sin acciones</span>
+                                    <?php endif; ?>
+
                                 <?php elseif ($usuario['rol'] === 'veterinario'): ?>
-                                    <!-- TODO [Sprint 3 - RF06]: Conectar modal para registrar diagnóstico y marcar atendida -->
-                                    <button class="btn btn-sm btn-outline-primary" onclick="mostrarAlertaSprint('Sprint 3 - RF06: Atender cita #<?= $c['id'] ?>')">Atender</button>
+                                    <?php if ($c['estado'] === 'confirmada' || $c['estado'] === 'pendiente'): ?>
+                                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalAtender<?= $c['id'] ?>">
+                                            Atender
+                                        </button>
+                                    <?php else: ?>
+                                        <span class="small text-muted"><?= htmlspecialchars($c['nota_clinica'] ?? 'Sin notas') ?></span>
+                                    <?php endif; ?>
+
                                 <?php else: ?>
                                     <span class="small text-muted"><?= htmlspecialchars($c['nota_clinica'] ?? 'Sin notas') ?></span>
                                 <?php endif; ?>
@@ -118,4 +153,29 @@
     </div>
 </div>
 
-<?php require __DIR__ . '/../layouts/footer.php'; ?>
+<!-- MODALES CLIENTE (Sprint 2 - RF02 & RF03) -->
+<?php if ($usuario['rol'] === 'cliente'): ?>
+    <!-- Modal Nueva Mascota -->
+    <div class="modal fade" id="modalNuevaMascota" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form action="index.php?action=registrarMascota" method="POST" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Registrar Nueva Mascota</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" name="nombre" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Especie</label>
+                        <select name="especie" class="form-select" required>
+                            <option value="Perro">Perro</option>
+                            <option value="Gato">Gato</option>
+                            <option value="Ave">Ave</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Raza</label>
