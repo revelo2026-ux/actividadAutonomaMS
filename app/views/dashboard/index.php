@@ -179,3 +179,92 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Raza</label>
+                                                <input type="text" name="raza" class="form-control" placeholder="Ej. Mestizo" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Edad (años)</label>
+                        <input type="number" name="edad" class="form-control" min="0" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Mascota</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalAgendarCita" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form action="index.php?action=agendarCita" method="POST" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Solicitar Nueva Cita</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Mascota</label>
+                        <select name="id_mascota" class="form-select" required>
+                            <?php foreach ($mascotas as $m): ?>
+                                <option value="<?= $m['id'] ?>"><?= htmlspecialchars($m['nombre']) ?> (<?= htmlspecialchars($m['especie']) ?>)</option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Veterinario</label>
+                        <select name="id_veterinario" class="form-select" required>
+                            <?php foreach ($veterinarios as $v): ?>
+                                <option value="<?= $v['id'] ?>"><?= htmlspecialchars($v['nombre']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Fecha y Hora</label>
+                        <input type="datetime-local" name="fecha_hora" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Motivo</label>
+                        <textarea name="motivo" class="form-control" rows="2" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Solicitar Cita</button>
+                </div>
+            </form>
+        </div>
+    </div>
+<?php endif; ?>
+
+<?php if ($usuario['rol'] === 'veterinario' && !empty($citas)): ?>
+    <?php foreach ($citas as $c): ?>
+        <?php if ($c['estado'] === 'confirmada' || $c['estado'] === 'pendiente'): ?>
+            <div class="modal fade" id="modalAtender<?= $c['id'] ?>" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <form action="index.php?action=cambiarEstadoCita" method="POST" class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Atender Cita - <?= htmlspecialchars($c['mascota']) ?></h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" name="id_cita" value="<?= $c['id'] ?>">
+                            <input type="hidden" name="estado" value="atendida">
+                            <p class="small text-muted mb-2"><strong>Motivo:</strong> <?= htmlspecialchars($c['motivo']) ?></p>
+                            <div class="mb-3">
+                                <label class="form-label">Nota clínica</label>
+                                <textarea name="nota_clinica" class="form-control" rows="3" required></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-success">Marcar como Atendida</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        <?php endif; ?>
+    <?php endforeach; ?>
+<?php endif; ?>
+
+<?php require __DIR__ . '/../layouts/footer.php'; ?>
+

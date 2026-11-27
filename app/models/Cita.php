@@ -79,3 +79,4 @@ class Cita {
 
         return $stmt->execute();
     }
+}
